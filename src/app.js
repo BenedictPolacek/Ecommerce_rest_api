@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import { config } from './config/env.js';
 import apiRoutes from './routes/index.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -10,16 +11,22 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
 
 // HTTP request logging
 if (config.nodeEnv !== 'test') {
   app.use(morgan('dev'));
 }
 
-// Body parsing
+// Body & Cookie parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Root health check endpoint
 app.get('/', (req, res) => {
