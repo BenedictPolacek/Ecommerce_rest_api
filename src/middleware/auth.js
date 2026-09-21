@@ -1,10 +1,12 @@
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env.js';
 import { AppError } from '../utils/AppError.js';
+import { userRepository } from '../modules/users/user.repository.js';
 
 /**
  * Middleware to authenticate requests via JWT Bearer token.
- * Populates `req.user` with decoded token payload `{ id, email, role }`.
+ * Populates `req.user` with `{ id, email }` from the token.
+ * Role is NOT set here — it is fetched live from the DB inside `authorize()`.
  */
 export const authenticate = (req, res, next) => {
   let token;
@@ -27,7 +29,6 @@ export const authenticate = (req, res, next) => {
     req.user = {
       id: decoded.id,
       email: decoded.email,
-      role: decoded.role,
     };
     next();
   } catch (error) {
@@ -40,16 +41,35 @@ export const authenticate = (req, res, next) => {
 
 /**
  * Role-based access control middleware.
- * Ensures the authenticated user has at least one of the required roles.
+ * Queries the DB for the user's current role (overwriting the token role),
+ * then checks if that role is in the allowed list.
+ *
+ * This ensures role changes or account deletions take effect immediately,
+ * without needing a separate `verifyLiveUser` middleware.
  *
  * @param {...string} roles - Allowed roles (e.g. 'admin', 'customer')
  */
 export const authorize = (...roles) => {
-  return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return next(new AppError('You do not have permission to perform this action', 403));
+  return async (req, res, next) => {
+    try {
+      const user = await userRepository.findById(req.user.id);
+
+      if (!user) {
+        return next(new AppError('User no longer exists. Please log in again.', 401));
+      }
+
+      // Overwrite token role with the live role from the database
+      req.user.role = user.role;
+      req.user.email = user.email;
+
+      if (!roles.includes(req.user.role)) {
+        return next(new AppError('You do not have permission to perform this action.', 403));
+      }
+
+      next();
+    } catch (error) {
+      return next(new AppError('Failed to verify user permissions.', 500));
     }
-    next();
   };
 };
 

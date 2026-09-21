@@ -6,14 +6,15 @@ import { AppError } from '../../utils/AppError.js';
 import { userRepository } from '../users/user.repository.js';
 
 /**
- * Sign a JWT token containing user identity and role
+ * Sign a JWT token containing the user's UUID and email.
+ * Role is NOT stored in the token — it is always fetched live from the
+ * database in `authorize()` to prevent stale permission issues.
  */
 function generateToken(user) {
   return jwt.sign(
     {
       id: user.id,
       email: user.email,
-      role: user.role,
     },
     config.jwt.secret,
     { expiresIn: config.jwt.expiresIn }
