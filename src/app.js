@@ -11,6 +11,11 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
+
+app.use('/api/docs', (req, res, next) => {
+  res.removeHeader('Content-Security-Policy');
+  next();
+});
 app.use(
   cors({
     origin: true,
@@ -28,13 +33,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Convenience redirect to Swagger UI
+app.get('/docs', (req, res) => {
+  res.redirect('/api/docs');
+});
+
 // Root health check endpoint
 app.get('/', (req, res) => {
   res.status(200).json({
     name: 'Ecommerce REST API',
     status: 'running',
     version: '1.0.0',
-    docs: '/api/health',
+    docs: '/api/docs',
   });
 });
 

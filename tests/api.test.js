@@ -22,6 +22,28 @@ describe('Base API & Error Handling', () => {
     expect(res.body.success).toBe(false);
     expect(res.body.message).toContain('Cannot GET /undefined-route');
   });
+
+  it('GET /docs should redirect to /api/docs', async () => {
+    const res = await request(app).get('/docs');
+    expect(res.status).toBe(302);
+    expect(res.headers.location).toBe('/api/docs');
+  });
+
+  it('GET /api/docs/ should return Swagger UI HTML', async () => {
+    const res = await request(app).get('/api/docs/');
+    expect(res.status).toBe(200);
+    expect(res.text).toContain('swagger-ui');
+  });
+
+  it('GET /api/docs.json should return OpenAPI 3.0 specification', async () => {
+    const res = await request(app).get('/api/docs.json');
+    expect(res.status).toBe(200);
+    expect(res.body.openapi).toBe('3.0.3');
+    expect(res.body.info.title).toBe('Ecommerce REST API');
+    expect(res.body.paths).toHaveProperty('/products');
+    expect(res.body.paths).toHaveProperty('/cart');
+    expect(res.body.paths).toHaveProperty('/orders');
+  });
 });
 
 describe('Authentication & Protected Routes Middleware', () => {

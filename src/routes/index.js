@@ -7,7 +7,24 @@ import cartRoutes from '../modules/cart/cart.routes.js';
 import orderRoutes from '../modules/orders/orders.routes.js';
 import addressRoutes from '../modules/addresses/address.routes.js';
 
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from '../docs/swagger.js';
+
 const router = Router();
+
+// API Documentation (Swagger UI & Raw OpenAPI JSON)
+router.use('/docs', swaggerUi.serve);
+router.get(
+  '/docs',
+  swaggerUi.setup(swaggerSpec, {
+    customSiteTitle: 'Ecommerce REST API Documentation',
+    customCss: '.swagger-ui .topbar { display: none }',
+  })
+);
+router.get('/docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.json(swaggerSpec);
+});
 
 // Base API health check
 router.get('/health', (req, res) => {
