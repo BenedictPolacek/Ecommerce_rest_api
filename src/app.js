@@ -10,12 +10,9 @@ import { errorHandler } from './middleware/errorHandler.js';
 const app = express();
 
 // Security middleware
+
 app.use(helmet());
 
-app.use('/api/docs', (req, res, next) => {
-  res.removeHeader('Content-Security-Policy');
-  next();
-});
 app.use(
   cors({
     origin: true,

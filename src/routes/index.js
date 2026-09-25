@@ -13,6 +13,11 @@ import { swaggerSpec } from '../docs/swagger.js';
 const router = Router();
 
 // API Documentation (Swagger UI & Raw OpenAPI JSON)
+router.use('/docs', (req, res, next) => {
+  res.removeHeader('Content-Security-Policy');
+  next();
+});
+// Swagger UI & JSON spec
 router.use('/docs', swaggerUi.serve);
 router.get(
   '/docs',

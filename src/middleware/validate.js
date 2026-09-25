@@ -37,15 +37,6 @@ export const validateParams = (schema) => (req, res, next) => {
   }
 };
 
-export const validateQuery = (schema) => (req, res, next) => {
-  try {
-    req.query = schema.parse(req.query);
-    next();
-  } catch (error) {
-    handleZodError(error, next);
-  }
-};
-
 const idParamSchema = z.object({
   id: z.string().uuid('Invalid identifier format (must be a valid UUID)'),
 });
